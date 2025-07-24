@@ -1,39 +1,37 @@
 <template>
   <div class="resume-container">
-    <!-- PDF Export Button -->
+
     <div class="export-controls">
       <button @click="exportToPdf" class="export-btn">导出PDF</button>
     </div>
 
-    <!-- Resume Content for PDF Export -->
-    <div class="resume-content">
-      <div id="pdfDom">
+    <div class="resume-content" id="resume-content">
+      <!-- 页1：个人信息+教育经历 -->
+      <div class="pdf-page">
         <header class="relative">
           <div class="profile">
             <div class="profile-info">
               <h1 class="p-0 m-0">江南</h1>
               <p class="p-0 m-0">{{ contact.phone }} | {{ contact.email }} | {{ contact.location }}</p>
-              <p class="p-0 m-0">{{ contact.wechat }} | {{ contact.experience }} | {{ contact.gender }}</p>
+              <p class="p-0 m-0">{{ contact.experience }} | {{ contact.post }} | {{ contact.gender }} | {{ contact.age
+                }}岁</p>
             </div>
-            <div class="profile-image ">
-              <img :src="head" alt="">
-            </div>
+            <img :src="head" class="absolute w-25mm right-0 top--20px">
+            <img :src="qrcode" class="absolute w-25mm left-0 top--6px">
           </div>
         </header>
-  
-        <section class="section">
+
+        <section class="section mt-40px">
           <h2>教育经历</h2>
           <div class="education-item">
             <div class="edu-header">
-              <span class="school sub-title">重庆第二师范学院 本科</span>
-              <span class="sub-title date">2018.09</span>
+              <span class="school sub-title">重庆第二师范学院 全日制本科 学信网可查</span>
+              <span class="sub-title date">2018.09 - 2022.06</span>
             </div>
             <p class="detail">物联网工程 数学与信息工程学院</p>
           </div>
-        </section>
-  
-        <section class="section">
-          <h2>技术栈</h2>
+
+          <h2>技术栈/能力</h2>
           <ul class="skills-list">
             <li v-for="(skill, index) in skills" :key="index" class="flex">
               <div class="skills-list-point"></div>
@@ -41,17 +39,40 @@
             </li>
           </ul>
         </section>
-  
-  
+
+
+        <h2>工作经历</h2>
+        <div v-for="(job, index) in workExperience.slice(0, 1)" :key="index" class="job-item">
+          <div class="job-header">
+            <span class="company">{{ job.company }}</span>
+            <span class="date">{{ job.period }}</span>
+          </div>
+          <p class="position">{{ job.position }}</p>
+
+          <!-- 工作详情 -->
+          <div v-if="job.details" class="job-details">
+            <div v-for="(detail, detailIndex) in job.details" :key="detailIndex" class="detail-section">
+              <h4 class="detail-title">{{ detail.title }}</h4>
+              <ul class="detail-list">
+                <li v-for="(item, itemIndex) in detail.items" :key="itemIndex" class="detail-item flex">
+                  {{ item }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="pdf-page">
         <section class="section">
-          <h2>工作经历</h2>
-          <div v-for="(job, index) in workExperience" :key="index" class="job-item">
+          <div v-for="(job, index) in workExperience.slice(1)" :key="index" class="job-item">
             <div class="job-header">
               <span class="company">{{ job.company }}</span>
               <span class="date">{{ job.period }}</span>
             </div>
             <p class="position">{{ job.position }}</p>
-  
+
             <!-- 工作详情 -->
             <div v-if="job.details" class="job-details">
               <div v-for="(detail, detailIndex) in job.details" :key="detailIndex" class="detail-section">
@@ -63,37 +84,11 @@
                 </ul>
               </div>
             </div>
+
           </div>
         </section>
-  
-        <section class="section">
-          <h2>项目经历</h2>
-          <div v-for="(project, index) in projects" :key="index" class="job-item">
-            <div class="job-header">
-              <span class="company">{{ project.name }}</span>
-              <span class="date">{{ project.period }}</span>
-            </div>
-            <p class="position">{{ project.role }} | {{ project.tech }}</p>
-  
-            <div class="job-details">
-              <ul class="detail-list">
-                <li v-for="(desc, descIndex) in project.description" :key="descIndex" class="detail-item">
-                  {{ desc }}
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
-  
-        <section class="section">
-          <h2>自我评价</h2>
-          <div class="self-evaluation">
-            <p v-for="(item, index) in selfEvaluation" :key="index" class="evaluation-item">
-              {{ item }}
-            </p>
-          </div>
-        </section>
-  
+
+
         <section class="section">
           <h2>其他</h2>
           <div class="other-section">
@@ -105,7 +100,7 @@
                 </li>
               </ul>
             </div>
-  
+
             <div class="personal-summary-section">
               <h4 class="sub-section-title">个人简述</h4>
               <div class="personal-summary">
@@ -124,101 +119,64 @@
 
 <script setup lang="ts">
 import { getCurrentInstance } from 'vue'
+import { ref } from 'vue'
 import head from './assets/4.png'
+import qrcode from './assets/3.png'
+import { snapdom } from '@zumer/snapdom';
+import jsPDF from 'jspdf';
 
 // Get the current instance to access global properties
 const instance = getCurrentInstance()
+const previewImg = ref<string | null>(null) // 1. 新增
 
 // Export to PDF function
 const exportToPdf = async () => {
-  try {
-    const pdfElement = document.querySelector('#pdfDom')
-    const containerElement = document.querySelector('.resume-container')
-
-    if (!pdfElement) {
-      console.error('PDF element not found')
-      return
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pages = document.querySelectorAll('.pdf-page');
+  let previewSet = false;
+  for (let i = 0; i < pages.length; i++) {
+    const result = await snapdom(pages[i], { scale: 2 });
+    const dataUrl = await result.toPng();
+    if (!previewSet) {
+      previewImg.value = dataUrl; // 只预览第一页
+      previewSet = true;
     }
-
-    // 保存原始样式
-    const originalContainerStyle = containerElement?.style.cssText || ''
-    const originalElementStyle = pdfElement.style.cssText || ''
-
-    // 临时移除容器的padding和margin，确保PDF只包含内容
-    if (containerElement) {
-      containerElement.style.padding = '0'
-      containerElement.style.margin = '0'
-      containerElement.style.background = 'white'
-    }
-
-    // 临时添加PDF导出样式
-    pdfElement.classList.add('pdf-export-mode')
-    pdfElement.style.margin = '0'
-    pdfElement.style.transform = 'none'
-
-    // 等待样式应用
-    await new Promise(resolve => setTimeout(resolve, 100))
-
-    if (instance?.appContext.app.config.globalProperties.$getPdf) {
-      await instance.appContext.app.config.globalProperties.$getPdf('江南-简历', '#pdfDom')
-      console.log('PDF exported successfully')
-    } else {
-      console.error('PDF export function not available')
-    }
-
-    // 恢复原始样式
-    if (containerElement) {
-      containerElement.style.cssText = originalContainerStyle
-    }
-    pdfElement.style.cssText = originalElementStyle
-    pdfElement.classList.remove('pdf-export-mode')
-
-  } catch (error) {
-    console.error('Error exporting PDF:', error)
-    // 确保在出错时也恢复样式
-    const pdfElement = document.querySelector('#pdfDom')
-    const containerElement = document.querySelector('.resume-container')
-
-    if (pdfElement) {
-      pdfElement.classList.remove('pdf-export-mode')
-      pdfElement.style.cssText = ''
-    }
-    if (containerElement) {
-      containerElement.style.cssText = ''
-    }
+    if (i > 0) pdf.addPage();
+    pdf.addImage(dataUrl, 'PNG', 0, 0, 210, 297);
   }
+  pdf.save('resume.pdf');
 }
 
 const contact = {
   phone: '13527354870',
   email: '495587206@qq.com',
   location: '重庆',
-  wechat: '微信同号',
-  experience: '二、三维前端开发',
-  gender: '男'
+  experience: '4年',
+  post: '二、三维前端开发',
+  gender: '男',
+  age: '26'
 }
 
 const skills = [
-  '精通 Javascript、Ts、ES6、CSS3(less/scss)、HTML5，有多个前端项目开发经验；',
-  '精通 Threejs、Echarts 等三维数字孪生可视化技术，精通对大屏、异形屏的前端自适应分辨率开发，熟悉 shader、webGL。参与翻译Three.js中文文档；',
-  '精通 Vue2/3、Vite、Webpack、VSCode 等前端常用工具、技术与脚手架；',
-  '精通 Class 类与面向对象的前端开发模式，掌握函数式编程与面向对象编程等开发模式；',
-  '熟练掌握 微信小程序，开发过包含微信登录、微信支付等功能的应用，并独立备案、提交审查、部署上线；',
-  '熟练掌握 async + await、Promise、回调等同步与异步请求思想与处理能力，保证代码可读性；',
-  '熟练掌握 Git、CI/CD、Linker、禅道、apipost、postman、蓝湖、磨刀等工具，有协同合作经验；',
-  '熟练掌握 Node.js、Nginx、MySQL，独立部署过服务器，对后端有一定了解；',
-  '熟悉用户体验、交互操作流程、及用户需求；',
-  'PS专精。'
+  '具备团队管理与项目推进能力，能够合理分配任务、组织代码评审、提升团队协作效率。',
+  '精通 JavaScript、TypeScript、ES6、CSS3、HTML5，具备丰富的前端项目开发经验。',
+  '精通 Vue2/Vue3、Vite、Webpack 等主流前端框架与工具，掌握 VSCode、Cursor 等开发 IDE，能够借助 AI 辅助开发。',
+  '精通 Three.js、ECharts 等三维/数据可视化技术，精通大屏与异形屏自适应开发，熟悉 Shader、WebGL，参与 Three.js 官方中文文档翻译。',
+  '精通 Photoshop，具备较强的视觉设计能力，能够与设计高效沟通。',
+  '掌握 微信小程序开发，独立实现微信登录、支付等功能，具备备案、审核、上线全流程经验。',
+  '掌握 前端工程化流程，熟悉CI/CD自动化测试与持续集成，能够搭建高效的前端开发与部署流水线。',
+  '掌握 在线协作文档、Git、Apipost、Postman、禅道、蓝湖、磨刀等协作与开发工具，具备良好团队协作经验。',
+  '具备 Node.js、Nginx、MySQL 等后端技术基础，能独立完成服务器部署。',
 ]
 
 const workExperience = [
   {
-    company: '重庆双高实业有限公司',
+    company: '重庆双高实业有限公司(国家电网)',
     position: '数据业务线 前端开发组长',
     period: '2024.06 - 至今',
     details: [
       {
-        title: '角色职责与任务',
+        title: '开发组长职责与任务',
         items: [
           '参与原型和 UI 设计评审，讨论 UI 展示、数据来源等系统相关内容及存在的问题',
           '及时提出原型和 UI 评审阶段存在的问题并给出建议，包括地图交互与功能、设计感、字形、热力范围设计等',
@@ -238,9 +196,9 @@ const workExperience = [
         ]
       },
       {
-        title: '关键指标看板',
+        title: '关键指标看板 (H5/IE11)',
         items: [
-          '支持 PC 端、移动端（H5）以及 IE11 浏览器，采用 Vue 2.7 版本进行开发',
+          '支持 PC 端、移动端 (H5) 以及 IE11 浏览器，采用 Vue 2.7 版本进行开发',
           '实施按需加载策略，控制每个页面的图表数量以保证 IE 浏览器和移动端的使用体验',
           '权限细分与后端系统协同，实施四级目录的权限控制',
           '严格执行上线流程，确保项目成功上架至国家电网的内网环境中'
@@ -249,7 +207,7 @@ const workExperience = [
     ]
   },
   {
-    company: '重庆驰图科技有限公司',
+    company: '重庆瞰图科技有限公司',
     position: '数字孪生二、三维 前端开发',
     period: '2022.03 - 2024.05',
     details: [
@@ -266,54 +224,10 @@ const workExperience = [
   }
 ]
 
-const projects = [
-  {
-    name: '能源大数据管理平台',
-    period: '2024.06 - 2024.12',
-    role: '前端负责人',
-    tech: 'Vue3 + TypeScript + Three.js + ECharts',
-    description: [
-      '负责整体前端架构设计，采用微前端架构，支持多团队协同开发',
-      '开发三维地理信息可视化系统，实现省级行政区地形渲染和动态热力图',
-      '封装 ECharts 组件库，提供 8 种标准化图表组件，开发效率提升 35%',
-      '实现多端适配（PC/移动端/IE11），保证良好的用户体验'
-    ]
-  },
-  {
-    name: '智慧园区数字孪生平台',
-    period: '2023.03 - 2024.05',
-    role: '核心开发者',
-    tech: 'Vue2 + Three.js + WebGL + Node.js',
-    description: [
-      '构建园区三维场景，包含建筑物、设备、人员等要素的实时渲染',
-      '开发设备监控模块，实现传感器数据的实时可视化展示',
-      '优化渲染性能，通过 LOD 技术和实例化渲染，FPS 稳定在 60 帧',
-      '集成物联网数据，实现数字孪生与现实世界的数据同步'
-    ]
-  },
-  {
-    name: '城市交通大屏可视化系统',
-    period: '2022.08 - 2023.02',
-    role: '前端开发',
-    tech: 'Vue2 + ECharts + Canvas + WebSocket',
-    description: [
-      '开发城市交通流量实时监控大屏，支持多种图表类型和动画效果',
-      '实现地图热力图展示，直观显示城市各区域交通拥堵情况',
-      '通过 WebSocket 实现数据实时更新，延迟控制在 100ms 以内',
-      '适配多种分辨率大屏设备，支持 4K 显示和异形屏幕'
-    ]
-  }
-]
 
-const selfEvaluation = [
-  '具有扎实的前端技术基础和丰富的项目经验，熟练掌握现代前端开发技术栈，能够独立完成复杂项目的架构设计和开发。',
-  '在三维可视化和数据可视化领域有深入研究，具备优秀的性能优化能力，能够处理大数据量的实时渲染需求。',
-  '具有良好的团队协作能力和技术领导力，能够带领团队完成高质量的项目交付，注重代码质量和开发规范。',
-  '学习能力强，对新技术保持敏感度，能够快速掌握并应用到实际项目中，持续提升技术水平和业务理解能力。'
-]
 
 const certifications = [
-  '软件设计师（中级）'
+  '软件设计师(中级)'
 ]
 
 const personalSummary = [
@@ -333,31 +247,16 @@ const personalSummary = [
   padding: 20px;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   min-height: 100vh;
   background: #f5f5f5;
+  flex-direction: column;
 }
 
 .resume-content {
-  /* A4纸比例：210mm × 297mm，约等于 1:1.414 */
-  width: 210mm;
-  min-height: 297mm;
-  max-width: 90vw;
-  /* 在小屏幕上限制最大宽度 */
-  border: 2px solid #333;
-  padding: 20mm;
-  /* 使用mm单位更符合A4纸张 */
   background: white;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-
-  /* 确保内容不会超出A4比例 */
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-
-header {
-  margin-bottom: 30px;
+  padding: 8mm;
 }
 
 .profile {
@@ -436,7 +335,6 @@ h2 {
   top: -14px;
   border-radius: 8px;
   overflow: hidden;
-  
 }
 
 .profile-image img {
@@ -534,19 +432,14 @@ h2 {
 }
 
 .detail-item {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.4;
   margin-bottom: 3px;
   padding-left: 12px;
   position: relative;
 }
 
-.detail-item::before {
-  content: '•';
-  position: absolute;
-  left: 0;
-  color: #666;
-}
+
 
 /* 自我评价样式 */
 .self-evaluation {
@@ -594,23 +487,13 @@ h2 {
   position: relative;
 }
 
-.qualification-item::before {
-  content: '🏆';
-  position: absolute;
-  left: 0;
-  font-size: 10px;
-}
-
 .personal-summary {
   padding: 0;
 }
 
 .summary-item {
+  padding-left: 12px;
   font-size: 12px;
-  line-height: 1.5;
-  margin-bottom: 6px;
-  text-align: justify;
-  text-indent: 2em;
 }
 
 /* PDF导出专用样式 */
@@ -622,7 +505,8 @@ h2 {
   margin: 0 !important;
   background: white !important;
   min-height: auto !important;
-  width: 210mm !important; /* A4宽度 */
+  width: 210mm !important;
+  /* A4宽度 */
   max-width: none !important;
   position: relative !important;
   transform: none !important;
@@ -637,8 +521,10 @@ h2 {
   position: absolute;
   width: 90px !important;
   /* 在PDF模式下，right和top是相对于容器内边距的，所以需要调整 */
-  right: 30px !important; /* 相对于内容区域的右边距 */
-  top: 30px !important;   /* 相对于内容区域的上边距 */
+  right: 30px !important;
+  /* 相对于内容区域的右边距 */
+  top: 30px !important;
+  /* 相对于内容区域的上边距 */
   border-radius: 8px !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
@@ -651,10 +537,19 @@ h2 {
   border-left: 2px solid #333 !important;
 }
 
-/* A4纸张预览模式样式 */
-.resume-content {
-  /* 添加阴影效果，模拟纸张 */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 0 20px rgba(0, 0, 0, 0.05);
-}
 
+.pdf-page {
+  margin-bottom: 20mm;
+  border: 1px solid #0004;
+  box-shadow: 1mm 1mm 2mm #0004;
+  width: 210mm;
+  min-height: 297mm;
+  height: 297mm;
+  box-sizing: border-box;
+  page-break-after: always;
+  background: white;
+  padding: 20mm;
+  overflow: hidden;
+  position: relative;
+}
 </style>

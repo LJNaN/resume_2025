@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@zumer/snapdom": "^1.9.6",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "less": "^4.3.0",
