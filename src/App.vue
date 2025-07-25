@@ -14,7 +14,7 @@
               <h1 class="p-0 m-0">江南</h1>
               <p class="p-0 m-0">{{ contact.phone }} | {{ contact.email }} | {{ contact.location }}</p>
               <p class="p-0 m-0">{{ contact.experience }} | {{ contact.post }} | {{ contact.gender }} | {{ contact.age
-                }}岁</p>
+              }}岁</p>
             </div>
             <img :src="head" class="absolute w-25mm right-0 top--20px">
             <img :src="qrcode" class="absolute w-25mm left-0 top--6px">
@@ -51,7 +51,7 @@
 
           <!-- 工作详情 -->
           <div v-if="job.details" class="job-details">
-            <div v-for="(detail, detailIndex) in job.details" :key="detailIndex" class="detail-section">
+            <div v-for="(detail, detailIndex) in job.details.slice(0, 3)" :key="detailIndex" class="detail-section">
               <h4 class="detail-title">{{ detail.title }}</h4>
               <ul class="detail-list">
                 <li v-for="(item, itemIndex) in detail.items" :key="itemIndex" class="detail-item flex">
@@ -65,6 +65,22 @@
 
 
       <div class="pdf-page">
+
+        <!-- 衔接上一页 -->
+        <div v-for="(job, index) in workExperience.slice(0, 1)" :key="index" class="job-item">
+          <!-- 工作详情 -->
+          <div v-if="job.details" class="job-details">
+            <div v-for="(detail, detailIndex) in job.details.slice(3)" :key="detailIndex" class="detail-section">
+              <h4 class="detail-title">{{ detail.title }}</h4>
+              <ul class="detail-list">
+                <li v-for="(item, itemIndex) in detail.items" :key="itemIndex" class="detail-item flex">
+                  {{ item }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
         <section class="section">
           <div v-for="(job, index) in workExperience.slice(1)" :key="index" class="job-item">
             <div class="job-header">
@@ -93,7 +109,7 @@
           <h2>其他</h2>
           <div class="other-section">
             <div class="qualification-section">
-              <h4 class="sub-section-title">资质证书</h4>
+              <h4 class="sub-section-title">资质/荣誉</h4>
               <ul class="qualification-list">
                 <li v-for="(cert, index) in certifications" :key="index" class="qualification-item">
                   {{ cert }}
@@ -118,27 +134,21 @@
 
 
 <script setup lang="ts">
-import { getCurrentInstance } from 'vue'
 import { ref } from 'vue'
 import head from './assets/4.png'
 import qrcode from './assets/3.png'
 import { snapdom } from '@zumer/snapdom';
 import jsPDF from 'jspdf';
 
-// Get the current instance to access global properties
-const instance = getCurrentInstance()
-const previewImg = ref<string | null>(null) // 1. 新增
-
 // Export to PDF function
 const exportToPdf = async () => {
   const pdf = new jsPDF('p', 'mm', 'a4');
-  const pages = document.querySelectorAll('.pdf-page');
+  const pages: any = document.querySelectorAll('.pdf-page');
   let previewSet = false;
   for (let i = 0; i < pages.length; i++) {
     const result = await snapdom(pages[i], { scale: 2 });
     const dataUrl = await result.toPng();
     if (!previewSet) {
-      previewImg.value = dataUrl; // 只预览第一页
       previewSet = true;
     }
     if (i > 0) pdf.addPage();
@@ -151,22 +161,22 @@ const contact = {
   phone: '13527354870',
   email: '495587206@qq.com',
   location: '重庆',
-  experience: '4年',
+  experience: '4年经验',
   post: '二、三维前端开发',
   gender: '男',
   age: '26'
 }
 
 const skills = [
-  '具备团队管理与项目推进能力，能够合理分配任务、组织代码评审、提升团队协作效率。',
-  '精通 JavaScript、TypeScript、ES6、CSS3、HTML5，具备丰富的前端项目开发经验。',
-  '精通 Vue2/Vue3、Vite、Webpack 等主流前端框架与工具，掌握 VSCode、Cursor 等开发 IDE，能够借助 AI 辅助开发。',
-  '精通 Three.js、ECharts 等三维/数据可视化技术，精通大屏与异形屏自适应开发，熟悉 Shader、WebGL，参与 Three.js 官方中文文档翻译。',
-  '精通 Photoshop，具备较强的视觉设计能力，能够与设计高效沟通。',
-  '掌握 微信小程序开发，独立实现微信登录、支付等功能，具备备案、审核、上线全流程经验。',
-  '掌握 前端工程化流程，熟悉CI/CD自动化测试与持续集成，能够搭建高效的前端开发与部署流水线。',
-  '掌握 在线协作文档、Git、Apipost、Postman、禅道、蓝湖、磨刀等协作与开发工具，具备良好团队协作经验。',
-  '具备 Node.js、Nginx、MySQL 等后端技术基础，能独立完成服务器部署。',
+  '具备团队管理与项目推进能力，能够合理分配任务、组织代码评审、提升团队协作效率',
+  '精通 JavaScript、TypeScript、ES6、CSS3、HTML5，具备丰富的前端项目开发经验',
+  '精通 Vue2/Vue3、Vite、Webpack 等主流前端框架与工具，掌握 Cursor 等开发 IDE，能够借助 AI 辅助开发',
+  '精通 Three.js、ECharts、动效 等三维/数据可视化技术，精通大屏与异形屏自适应开发，熟悉 Shader、WebGL，参与 Three.js 官方中文文档翻译',
+  '精通 Photoshop，具备较强的视觉设计能力，能够与设计高效沟通',
+  '掌握 微信小程序开发，独立实现微信登录、支付等功能，具备备案、审核、上线全流程经验',
+  '掌握 前端工程化流程，熟悉CI/CD自动化测试与持续集成，能够搭建高效的前端开发与部署流水线',
+  '掌握 在线协作文档、Git、Apipost、Postman、禅道、蓝湖、磨刀等协作与开发工具，具备良好团队协作经验',
+  '具备 Node.js、Nginx、MySQL 等后端技术基础，能独立完成服务器部署',
 ]
 
 const workExperience = [
@@ -178,6 +188,8 @@ const workExperience = [
       {
         title: '开发组长职责与任务',
         items: [
+          '理解项目业务需求，根据实际业务改造公司现有前端框架，实现前端框架定制化、精简化，降低同事学习成本，提升协同开发效率 15%，bug 率降低 15%',
+          '开展技能分享交流会，分享动效、三维效果、数据可视化等技术，参会研发人员45人',
           '参与原型和 UI 设计评审，讨论 UI 展示、数据来源等系统相关内容及存在的问题',
           '及时提出原型和 UI 评审阶段存在的问题并给出建议，包括地图交互与功能、设计感、字形、热力范围设计等',
           '领导并协调前端开发团队，根据团队成员的技能和项目需求，合理分配工作任务',
@@ -192,32 +204,59 @@ const workExperience = [
           '通过按需加载、动态注册策略优化组件体积，单图表资源加载耗时降低至 500ms 以内',
           '独立完成 Three.js 三维地图引擎开发，增加辉光、轮廓、RGB、抗锯齿等滤镜和效果',
           '实现省级行政区地形渲染、动态热力图更新及3D模型交互功能，FPS 稳定在60帧以上',
-          '独立完成动态水平面的片元着色器制作、三维旋转轮盘、适配 Echarts 地图的自定义内阴影'
+          '独立完成动态水平面的片元着色器制作、三维旋转轮盘，制作 Echarts 官方未支持的地图自定义内阴影'
         ]
       },
       {
         title: '关键指标看板 (H5/IE11)',
         items: [
-          '支持 PC 端、移动端 (H5) 以及 IE11 浏览器，采用 Vue 2.7 版本进行开发',
-          '实施按需加载策略，控制每个页面的图表数量以保证 IE 浏览器和移动端的使用体验',
-          '权限细分与后端系统协同，实施四级目录的权限控制',
-          '严格执行上线流程，确保项目成功上架至国家电网的内网环境中'
+          '支持 PC 端、移动端 (H5) ，兼容 IE11 浏览器，采用 Vue 2.7 版本进行开发',
+          '实施按需加载策略，控制每个页面的图表数量以保证 IE 浏览器和移动端的使用体验，所有组件均采用自适应设计，确保移动端用户有充足的安全区。兼顾键鼠与移动端的操作习惯，提升用户体验',
+          '权限细分与后端系统协同，实施四级目录的权限控制,允许在后台灵活配置每个四级目录的权限指标',
+          '严格执行 「提交测试、修复问题、进行回归测试、审核通过、正式上线、上线后测试、发布上线」 的流程上线，确保项目成功上架至国家电网的内网环境中'
+        ]
+      },
+      {
+        title: '数据底座 (数据中台/系统安全)',
+        items: [
+          '基于 Vue3、Vite、Pinia、Vue Router 搭建数据中台，涵盖数据接入、处理、分析与可视化',
+          '负责系统安全架构设计，严格落实用户敏感操作二次鉴权、细粒度角色权限分配、安全审计、异常告警、数据加密与备份等多项安全机制，全面覆盖系统级与业务级安全事件',
+          '使用 sesioon、token、authorization、请求加签、数据加密等技术形成组合拳，极大增加系统安全性，系统通过电科院、国网信通部、国网大数据中心等权威机构的安全测评，满足数据传输完整性、会话管理、并发控制、CSRF防护、敏感信息保护等合规要求，有效防范明文传输、上传漏洞、信息泄露、设计缺陷等安全风险',
+          '实现敏感操作二次鉴权、业务配置员权限精细化管控，支持 API 接口全流程管理 (上传、申请、审批、调用) ，并监控调用次数、频率与结果',
         ]
       }
     ]
   },
   {
     company: '重庆瞰图科技有限公司',
-    position: '数字孪生二、三维 前端开发',
+    position: '前端开发 (数字孪生方向)',
     period: '2022.03 - 2024.05',
     details: [
       {
-        title: '主要项目与成果',
+        title: '石油管道项目 (Three.js)',
         items: [
-          '负责数字孪生项目的前端开发，使用 Three.js 构建三维可视化场景',
-          '开发多个大屏可视化项目，实现数据实时展示和交互功能',
-          '参与智慧城市、智慧园区等项目的前端架构设计和开发',
-          '优化三维渲染性能，提升用户体验和系统稳定性'
+          '动态生成：利用 Canvas 批量动态生成油罐编号图像，附加于油罐上',
+          '管道关系图：通过图结构生成管道关系图，使用广度优先搜索 (BFS) 算法实现自动查找管道线路的功能',
+          '管道类设计：继承网格类，创建管道类，提供 set/get 方法以快速实现业务需求',
+          '动态效果：编写管道 Shader，呈现流动状态下的动态效果'
+        ]
+      },
+      {
+        title: '实时的仓库搬运系统项目 (Three.js)',
+        items: [
+          '接口对接：对接甲方的 WebSocket 和 HTTP 接口，模型实时响应数据变化 (动画、移动、状态更新等) ',
+          '性能优化：对场景中的重复模型进行实例化和网格合并，显著提升渲染性能',
+          '二维页面开发：独立完成项目看板及二维页面设计，使用 Echarts 图表 (饼图、折线图等) ，优化二、三维兼容性和路由设计',
+          '时间回溯系统：开发时间回溯功能，选择时间段查看搬运情况，支持倍速、进度条、终止和重复等选项'
+        ]
+      },
+      {
+        title: '含底图的模型展示项目 (Cesium)',
+        items: [
+          '地图集成：集成高德、腾讯、天地图、谷歌、必应等多种地图源，支持实时切换与自定义图层显示/隐藏',
+          '模型导入：将客户模型导入指定经纬度，支持交互点击、自定义弹窗和高亮功能。支持导入 GLB 模型、倾斜摄影、点云、地形及流动管线等',
+          '视觉美化：整体项目滤镜美化，实时调整天气效果 (晴、雨、雪) ，并更新模型的 PBR 材质，提升真实感',
+          '测量功能：支持量算与测绘功能，允许用户点击画线、面以量算距离、面积及等高线等'
         ]
       }
     ]
@@ -227,12 +266,14 @@ const workExperience = [
 
 
 const certifications = [
-  '软件设计师(中级)'
+  '计算机技术与软件专业技术资格 (软件设计师 中级)',
+  '大学学院奖学金 (三等)',
+  '大学学院Web应用技术比赛 (第一)'
 ]
 
 const personalSummary = [
-  '没闯过祸，言行有度，谨言慎行；性格开朗，能高效地与同事沟通交流，提升团队积极性；',
-  '能提前意识到项目的痛点难点，并与上级积极沟通；喜欢探索新兴技术并用以实践。'
+  '没闯过祸，言行有度，谨言慎行，性格开朗，能高效地与同事沟通交流，提升团队积极性',
+  '能提前意识到项目的痛点难点，并与上级积极沟通，喜欢探索新兴技术并用以实践'
 ]
 </script>
 
@@ -477,6 +518,7 @@ h2 {
   margin: 0;
   padding: 0;
   list-style: none;
+  display: flex;
 }
 
 .qualification-item {
