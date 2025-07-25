@@ -145,13 +145,15 @@ const exportToPdf = async () => {
   const pages: any = document.querySelectorAll('.pdf-page');
   let previewSet = false;
   for (let i = 0; i < pages.length; i++) {
+    // 降低 scale
     const result = await snapdom(pages[i], { scale: 2 });
-    const dataUrl = await result.toPng();
+    // 用 JPEG 格式，设置压缩质量
+    const dataUrl = await result.toJpg(); // 0.7 可调
     if (!previewSet) {
       previewSet = true;
     }
     if (i > 0) pdf.addPage();
-    pdf.addImage(dataUrl, 'PNG', 0, 0, 210, 297);
+    pdf.addImage(dataUrl, 'JPEG', 0, 0, 210, 297);
   }
   pdf.save('江南-前端工程师-4年.pdf');
 }
