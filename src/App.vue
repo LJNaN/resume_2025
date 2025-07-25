@@ -134,7 +134,6 @@
 
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import head from './assets/4.png'
 import qrcode from './assets/3.png'
 import { snapdom } from '@zumer/snapdom';
@@ -154,7 +153,7 @@ const exportToPdf = async () => {
     if (i > 0) pdf.addPage();
     pdf.addImage(dataUrl, 'PNG', 0, 0, 210, 297);
   }
-  pdf.save('resume.pdf');
+  pdf.save('江南-前端工程师-4年.pdf');
 }
 
 const contact = {
@@ -197,7 +196,7 @@ const workExperience = [
         ]
       },
       {
-        title: '能源大数据管理平台 (ECharts/Three.js)',
+        title: '能源大数据管理平台 (ECharts/Three.js/可视化大屏)',
         items: [
           '主导 ECharts 组件库二次封装，基于业务场景抽象通用配置模板，实现 8 种标准化图表组件',
           '支持动态数据渲染、主题切换及响应式布局，开发效率提升 35%',
